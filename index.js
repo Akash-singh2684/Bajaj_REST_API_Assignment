@@ -1,83 +1,102 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const cors = require("cors");
-const dotenv = require("dotenv"); // Import the dotenv package
-
-dotenv.config(); // Load the environment variables from .env
 
 const app = express();
-
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
+
+const FULL_NAME = "akash_singh"; 
+const DOB = "26042003";      
+const EMAIL = "akash2604singh@gmail.com";
+const ROLL_NUMBER = "22BCE10955";
+
+
+function alternatingCaps(str) {
+  let result = "";
+  let upper = true;
+  for (let ch of str) {
+    if (/[a-zA-Z]/.test(ch)) {
+      result += upper ? ch.toUpperCase() : ch.toLowerCase();
+      upper = !upper;
+    } else {
+      result += ch;
+    }
+  }
+  return result;
+}
+
+// POST route
 app.post("/bfhl", (req, res) => {
   try {
-    const data = req.body.data || [];
+    const data = req.body.data;
+    if (!Array.isArray(data)) {
+      return res.status(400).json({
+        is_success: false,
+        message: "Invalid input. 'data' must be an array."
+      });
+    }
 
-    // Initialize arrays
-    const evenNumbers = [];
-    const oddNumbers = [];
-    const alphabets = [];
-    const specialChars = [];
+    let even_numbers = [];
+    let odd_numbers = [];
+    let alphabets = [];
+    let special_characters = [];
     let sum = 0;
 
-    // Separate input
-    for (const item of data) {
-      if (!isNaN(item) && item.trim() !== "") {
-        // Handle numbers
-        const num = parseInt(item, 10);
+    data.forEach(item => {
+      if (/^-?\d+$/.test(item)) { 
+        let num = parseInt(item);
         if (num % 2 === 0) {
-          evenNumbers.push(item); // keep as string
+          even_numbers.push(item);
         } else {
-          oddNumbers.push(item); // keep as string
+          odd_numbers.push(item);
         }
         sum += num;
       } else if (/^[a-zA-Z]+$/.test(item)) {
-        // Handle alphabets (convert to uppercase)
         alphabets.push(item.toUpperCase());
       } else {
-        // Handle special characters
-        specialChars.push(item);
+        special_characters.push(item);
       }
-    }
-
-    // Build concatenated string (reverse + alternating caps)
-    const reversedAlphabets = alphabets.join("").split("").reverse();
-    let concatString = "";
-    reversedAlphabets.forEach((ch, i) => {
-      concatString += i % 2 === 0 ? ch.toUpperCase() : ch.toLowerCase();
     });
 
-    // Response
-    res.status(200).json({
+   
+    let concatString = data
+      .filter(item => /^[a-zA-Z]+$/.test(item))
+      .join("")
+      .split("")
+      .reverse()
+      .join("");
+    concatString = alternatingCaps(concatString);
+
+    return res.status(200).json({
       is_success: true,
-      user_id: "akash_singh_26042003", // full_name_ddmmyyyy (lowercase)
-      email: "akash2604singh@gmail.com",
-      roll_number: "22bce10955",
-      odd_numbers: oddNumbers,
-      even_numbers: evenNumbers,
-      alphabets: alphabets,
-      special_characters: specialChars,
+      user_id: `${FULL_NAME}_${DOB}`,
+      email: EMAIL,
+      roll_number: ROLL_NUMBER,
+      odd_numbers,
+      even_numbers,
+      alphabets,
+      special_characters,
       sum: sum.toString(),
-      concat_string: concatString,
+      concat_string: concatString
     });
+
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       is_success: false,
-      message: "Something went wrong",
-      error: error.message,
+      message: "Server error",
+      error: error.message
     });
   }
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 const path = require("path");
-
-app.use(express.static(path.join(__dirname, "frontend")));
-
+app.use(express.static(path.join(__dirname, "bfhl-frontend")));
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend", "index.html"));
+  res.sendFile(path.join(__dirname, "bfhl-frontend", "index.html"));
 });
