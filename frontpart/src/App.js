@@ -32,7 +32,7 @@ const App = () => {
       }
 
       // Call your backend API
-      const response = await axios.post('http://localhost:5000/bfhl', data);
+      const response = await axios.post('https://bajaj-rest-api-assignment.onrender.com', data);
       setResponse(response.data);
     } catch (err) {
       setError('Invalid JSON input: ' + err.message);
